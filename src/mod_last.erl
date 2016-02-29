@@ -37,7 +37,7 @@
 	 process_sm_iq/3, on_presence_update/4, import/1,
 	 import/3, store_last_info/4, get_last_info/2,
 	 remove_user/2, transform_options/1, mod_opt_type/1,
-	 opt_type/1]).
+	 opt_type/1, set_online/4]).
 
 -include("ejabberd.hrl").
 -include("logger.hrl").
@@ -69,7 +69,9 @@ start(Host, Opts) ->
     ejabberd_hooks:add(remove_user, Host, ?MODULE,
 		       remove_user, 50),
     ejabberd_hooks:add(unset_presence_hook, Host, ?MODULE,
-		       on_presence_update, 50).
+		       on_presence_update, 50),
+    ejabberd_hooks:add(set_presence_hook, Host, ?MODULE,
+		       set_online, 50).
 
 stop(Host) ->
     ejabberd_hooks:delete(remove_user, Host, ?MODULE,
@@ -234,6 +236,10 @@ get_last_iq(IQ, SubEl, LUser, LServer) ->
 on_presence_update(User, Server, _Resource, Status) ->
     TimeStamp = p1_time_compat:system_time(seconds),
     store_last_info(User, Server, TimeStamp, Status).
+
+set_online(User, Server, _Resource, Status) ->
+    TimeStamp = 0,
+    store_last_info(User, Server, TimeStamp, <<>>).
 
 store_last_info(User, Server, TimeStamp, Status) ->
     LUser = jid:nodeprep(User),
